@@ -17,7 +17,7 @@ from bot.subscription import (
 
 MENU_DRIVER = "📝 Ulanish uchun Ariza"
 MENU_BRAND = "🎨 Brend Ariza"
-MENU_CONTACT = "📞 Bog'lanish uchun"
+MENU_CONTACT = "📍 Aloqa va manzil"
 MENU_OFFICE = "📍 Ofis manzili"
 MENU_SPECTRE = "⚡ Spectre Energyga ariza"
 MENU_REGION = "🔄 Hududni almashtirish"
@@ -46,7 +46,7 @@ TASHKENT_OFFICE_KEYBOARD = InlineKeyboardMarkup([
 def main_keyboard(region: str) -> ReplyKeyboardMarkup:
     rows = [[menu_button(MENU_DRIVER, "join")],
             [menu_button(MENU_BRAND, "brand"), menu_button(MENU_SPECTRE, "energy")],
-            [menu_button(MENU_CONTACT, "contact"), menu_button(MENU_OFFICE, "office")],
+            [menu_button(MENU_CONTACT, "contact")],
             [menu_button(MENU_REGION, "region")]]
     return ReplyKeyboardMarkup(rows, resize_keyboard=True)
 
@@ -221,22 +221,15 @@ async def require_region(update: Update, context: ContextTypes.DEFAULT_TYPE, all
 
 
 async def show_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    if not await require_region(update, context):
-        return ConversationHandler.END
-    clear_application(context)
-    region = get_region(context)
-    text = TASHKENT_CONTACT_TEXT if region == TASHKENT else CONTACT_TEXT
-    await update.message.reply_text(
-        f"<b>{region_name(region)} — bog‘lanish</b>\n\n" + text,
-        parse_mode="HTML",
-        reply_markup=main_keyboard(region),
-        disable_web_page_preview=True,
-    )
-    return ConversationHandler.END
+    return await show_office(update, context)
 
 
 def build_contact_handler() -> MessageHandler:
-    return MessageHandler(filters.ChatType.PRIVATE & filters.Regex(r"^(?:📞 )?Bog'lanish uchun$"), show_contact)
+    # Old keyboards continue to reach the same combined post.
+    return MessageHandler(
+        filters.ChatType.PRIVATE & filters.Regex(r"^(?:📍 Aloqa va manzil|(?:📞 )?Bog'lanish uchun)$"),
+        show_contact,
+    )
 
 
 async def show_office(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -251,6 +244,8 @@ async def show_office(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     else:
         photo_path, caption, keyboard = OFFICE_PHOTO, OFFICE_CAPTION, OFFICE_KEYBOARD
         cache_key = "office_photo"
+    contact = TASHKENT_CONTACT_TEXT if get_region(context) == TASHKENT else CONTACT_TEXT
+    caption += "\n\n" + contact
     if not photo_path.is_file():
         await update.message.reply_text(caption, parse_mode="HTML", reply_markup=keyboard)
         return ConversationHandler.END

@@ -69,6 +69,8 @@ class RegionalTests(unittest.IsolatedAsyncioTestCase):
         msg.message.reply_photo.assert_not_awaited()
         sent = msg.message.reply_text.await_args
         self.assertIn("Mirzo Ulug‘bek", sent.args[0])
+        self.assertIn("+998 78 113-80-81", sent.args[0])
+        self.assertEqual(msg.message.reply_text.await_count, 1)
         self.assertTrue(sent.kwargs["reply_markup"].inline_keyboard[0][0].url.startswith("https://"))
 
     async def test_start_welcome_text_and_region_buttons(self):
@@ -176,7 +178,7 @@ class RegionalTests(unittest.IsolatedAsyncioTestCase):
         for city in ("namangan", "tashkent"):
             self.assertEqual(buttons(city), [
                 start.MENU_DRIVER, start.MENU_BRAND, start.MENU_SPECTRE,
-                start.MENU_CONTACT, start.MENU_OFFICE, start.MENU_REGION,
+                start.MENU_CONTACT, start.MENU_REGION,
             ])
             msg = update()
             await start.show_menu(msg, context(city))
@@ -199,7 +201,7 @@ class RegionalTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(office.kwargs["reply_markup"].inline_keyboard[0][0].url,
                          "https://yandex.uz/maps/-/CTxxiJ5~")
         await start.show_contact(msg, context("tashkent"))
-        contact = msg.message.reply_text.call_args.args[0]
+        contact = msg.message.reply_photo.call_args.kwargs["caption"]
         self.assertIn("+998 78 113-80-81", contact)
         self.assertIn("Toshkent shahri", contact)
         self.assertNotIn("@humo_Namangan", contact)
@@ -209,13 +211,13 @@ class RegionalTests(unittest.IsolatedAsyncioTestCase):
                                ("tashkent", "@wb_taxi_Humo")):
             msg = update()
             await start.show_contact(msg, context(city))
-            text = msg.message.reply_text.call_args.args[0]
-            self.assertEqual(text,
-                f"<b>{regions.region_name(city)} — bog‘lanish</b>\n\n"
-                "📞 Aloqa: +998 78 113-80-81\n"
-                f"✈️ Telegram: {telegram}\n"
-                "📢 Telegram kanal: @WB_HUMO_TAXI\n"
-                '📸 Instagram: <a href="https://www.instagram.com/humo_wb_taxi/">@humo_wb_taxi</a>')
+            text = msg.message.reply_photo.call_args.kwargs["caption"]
+            self.assertIn(regions.region_name(city), text)
+            self.assertIn(telegram, text)
+            self.assertIn("ofis manzili", text)
+            self.assertIn("https://www.instagram.com/humo_wb_taxi/", text)
+            self.assertEqual(msg.message.reply_photo.await_count, 1)
+            msg.message.reply_text.assert_not_awaited()
             self.assertNotIn("+998 33 113-80-85", text)
             self.assertEqual(text.count("+998"), 1)
 
@@ -250,7 +252,7 @@ class RegionalTests(unittest.IsolatedAsyncioTestCase):
         await start.show_office(msg, ctx)
         self.assertEqual(msg.message.reply_photo.call_args.kwargs["photo"], "offline-office")
         await start.show_contact(msg, ctx)
-        self.assertIn(start.CONTACT_TEXT, msg.message.reply_text.call_args.args[0])
+        self.assertIn(start.CONTACT_TEXT, msg.message.reply_photo.call_args.kwargs["caption"])
 
     async def test_city_confirmation_has_no_branch_wording(self):
         for city in ("namangan", "tashkent"):
