@@ -1,5 +1,7 @@
 # WB HUMO Taxi · Telegram bot
 
+Namuna va ofis rasmlari ochiq repoga kiritilmagan. Rasmlarsiz ham hujjat ko‘rsatmalari va ofis manzili matn bilan chiqadi. Kerakli rasmlarni keyin serverdagi `bot/templates` papkasiga qo‘shish mumkin.
+
 NAMANTOSH loyihasidagi mavjud haydovchi, brend, Spectre va hududiy operator oqimlarini saqlagan alohida bot nusxasi.
 
 ## Yangilanish

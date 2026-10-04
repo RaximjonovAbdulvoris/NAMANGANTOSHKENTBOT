@@ -1,0 +1,15 @@
+modules = ["python-3.11"]
+
+[workflows]
+runButton = "Telegram Bot"
+
+[[workflows.workflow]]
+name = "Telegram Bot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -m bot.main"
+
+[workflows.workflow.metadata]
+outputType = "console"
